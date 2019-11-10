@@ -20,7 +20,7 @@ To get started, simply grant a permission to execute the file, and you can run i
 
 ### Dependencies
 
-bash, calc, grep, and awk are required for the script to run.
+bc, grep, and awk are required for the script to run.
 
 ## Example
 **Using the minimum requirements**
@@ -58,7 +58,7 @@ bash, calc, grep, and awk are required for the script to run.
     0.0B/s ^ 0.0B/s v
     78.1KB/s ^ 11.4KB/s v
     0.1MB/s ^ 0.1MB/s v
-    
+
 **Using custom interval**
 
     $ nettraffic -i wlp2s0 -t 3
@@ -140,4 +140,4 @@ bash, calc, grep, and awk are required for the script to run.
 
 ### 20161224
 
-* Initial Release 
+* Initial Release

@@ -1,11 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 
-hash calc 2>/dev/null || { echo >&2 "calc is required but not installed, aborting."; exit 1; }
+VALUE_COLOR=${color:-$(xrescat i3xrocks.value.color "#D8DEE9")}
+LABEL_COLOR=${label_color:-$(xrescat i3xrocks.label.color "#7B8394")}
 
-NAME="nettrafic"
-VERSION="0.3.4"
+VALUE_FONT=${font:-$(xrescat i3xrocks.value.font "Source Code Pro Medium 13")}
+
 GET="cat /proc/net/dev"
-LABEL=false
+LABEL=true
+UPL=${label_icon:-$(xrescat i3xrocks.label.up ▲)}
+DNL=${label_icon:-$(xrescat i3xrocks.label.dn ▼)}
+ULEV=2
+IF=`ip route get 1.1.1.1 | grep -Po '(?<=dev\s)\w+' | cut -f1 -d ' '`
+IF="${BLOCK_INSTANCE:-${IF}}"
 
 while getopts i:a:u:e:s:t:U:D:lhv option
 do
@@ -25,10 +31,6 @@ do
       DLY=${OPTARG};;
     l)
       LABEL=true;;
-    U)
-      UPL=${OPTARG};;
-    D)
-      DNL=${OPTARG};;
     h)
       echo -e "Usage: nettraffic [OPTION]"
       echo -e "Options:"
@@ -39,8 +41,6 @@ do
       echo -e "    \t\t\t 4 for KB/s). Default if 4."
       echo -e "  -l\t\t\t Choose whether or not to display the label (up or down)."
       echo -e "  -s  (%string%)\t A separator to divide between up and down. Default is none."
-      echo -e "  -U  (%string%)\t The label for upstream data traffic. Default is up if -l is used."
-      echo -e "  -D  (%string%)\t The label for downstream data traffic. Default is dn if -l is used."
       echo -e "  -t  (%integer%)\t Set the interval for the data update. Default is 1."
       echo -e "  -v\t\t\t Prints version number."
       echo -e "  -h\t\t\t Prints this help."
@@ -54,18 +54,18 @@ do
   esac
 done
 
-if [[ "$IF" = "" ]]; then
+if [ "$IF" = "" ]; then
   echo "No interface specified"
   exit
 fi
 
-if [[ "$LABEL" = true ]]; then
-  if [[ "$UPL" = "" ]]; then
+if [ "$LABEL" = true ]; then
+  if [ "$UPL" = "" ]; then
     UP=" up"
   else
     UP=$UPL
   fi
-  if [[ "$DNL" = "" ]]; then
+  if [ "$DNL" = "" ]; then
     DN=" dn"
   else
     DN=$DNL
@@ -75,7 +75,7 @@ else
   DN=""
 fi
 
-if [[ "$UNIT" = "MB" || "$UNIT" = "M" ]]; then
+if [ "$UNIT" = "MB" -o "$UNIT" = "M" ]; then
   FAC=1048576
   case "$ULEV"
   in
@@ -85,7 +85,7 @@ if [[ "$UNIT" = "MB" || "$UNIT" = "M" ]]; then
     3) SUF="M/s";;
     *) SUF="MB/s";;
   esac
-elif [[ "$UNIT" = "KB" || "$UNIT" = "K" ]]; then
+elif [ "$UNIT" = "KB" -o "$UNIT" = "K" ]; then
   FAC=1024
   case "$ULEV"
   in
@@ -95,7 +95,7 @@ elif [[ "$UNIT" = "KB" || "$UNIT" = "K" ]]; then
     3) SUF="K/s";;
     *) SUF="KB/s";;
   esac
-elif [[ "$UNIT" = "B" || "$UNIT" = "" ]]; then
+elif [ "$UNIT" = "B" -o "$UNIT" = "" ]; then
   FAC=1
   case "$ULEV"
   in
@@ -106,7 +106,7 @@ elif [[ "$UNIT" = "B" || "$UNIT" = "" ]]; then
   esac
 fi
 
-if [[ "$DLY" = "" ]]; then
+if [ "$DLY" = "" ]; then
   DLY=1;
 fi
 
@@ -116,24 +116,25 @@ AN="0.0"
 
 while :
 do
-  if [[ "$RT" = "up" ]]; then
-    echo "$TN$SUF$UP"
-  elif [[ "$RT" = "down" || "$RT" = "dn" ]]; then
-    echo "$RN$SUF$DN"
-  elif [[ "$RT" = "total" ]]; then
-    echo "$AN$SUF"
+  if [ "$RT" = "up" ]; then
+    echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\"> $TN$SUF</span><span color=\"${LABEL_COLOR}\">${UP}</span>"
+  elif [ "$RT" = "down" -o "$RT" = "dn" ]; then
+    echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\"> $RN$SUF</span><span color=\"${LABEL_COLOR}\">${DN}</span>"
+  elif [ "$RT" = "total" ]; then
+    echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\"> $AN$SUF</span>"
   else
-    if [[ "$SEP" = "" ]]; then
-      if [[ "$LABEL" = false ]]; then
-        echo "$RN$SUF $TN$SUF"
+    if [ "$SEP" = "" ]; then
+      if [ "$LABEL" = false ]; then
+        echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\"> $RN$SUF $TN$SUF</span>"
       else
-        echo "$RN$SUF$DN $TN$SUF$UP"
+    echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\"> $RN$SUF</span><span color=\"${LABEL_COLOR}\">${DN} </span><span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\">$TN$SUF</span><span color=\"${LABEL_COLOR}\">${UP}</span>"
       fi
     else
-      if [[ "$LABEL" = false ]]; then
-        echo "$RN$SUF $SEP $TN$SUF"
+      if [ "$LABEL" = false ]; then
+        echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\"> $RN$SUF $SEP $TN$SUF</span>"
       else
-        echo "$RN$SUF$DN $SEP $TN$SUF$UP"
+    echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\">
+    $RN$SUF</span><span color=\"${LABEL_COLOR}\">${DN} </span><span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\">$SEP $TN$SUF</span><span color=\"${LABEL_COLOR}\">${UP}</span>"
       fi
     fi
   fi
@@ -142,10 +143,12 @@ do
   sleep $DLY
   RX2=`$GET | grep $IF | awk '{print $2}'`; TX2=`$GET | grep $IF | awk '{print $10}'`
 
-  RX=($RX2-$RX1)/$DLY; TX=($TX2-$TX1)/$DLY; AX=$RX+$TX
+  RX=`echo "scale = 0; ($RX2-$RX1)/$DLY" | bc -l`
+  TX=`echo "scale = 0; ($TX2-$TX1)/$DLY" | bc -l`
+  AX=`echo "scale = 0; $RX+$TX" | bc -l`
 
-  if [[ "$UNIT" = "" ]]; then
-    if [[ "$RX" -ge 102400 || "$TX" -ge 102400 ]]; then
+  if [ "$UNIT" = "" ]; then
+    if [ "$RX" -ge 102400 -o "$TX" -ge 102400 ]; then
       FAC=1048576
       case "$ULEV"
       in
@@ -155,7 +158,7 @@ do
         3) SUF="M/s";;
         *) SUF="MB/s";;
       esac
-    elif [[ "$RX" -ge 100 || "$TX" -ge 100 ]]; then
+    elif [ "$RX" -ge 100 -o "$TX" -ge 100 ]; then
       FAC=1024
       case "$ULEV"
       in
@@ -177,7 +180,7 @@ do
     fi
   fi
 
-  RN=`calc $RX/$FAC | awk '{ x = sprintf("%.1f", $1); print x }'`
-  TN=`calc $TX/$FAC | awk '{ x = sprintf("%.1f", $1); print x }'`
-  AN=`calc $AX/$FAC | awk '{ x = sprintf("%.1f", $1); print x }'`
+  RN=`echo $RX/$FAC | bc -l | awk '{ x = sprintf("%.1f", $1); print x }'`
+  TN=`echo $TX/$FAC | bc -l | awk '{ x = sprintf("%.1f", $1); print x }'`
+  AN=`echo $AX/$FAC | bc -l | awk '{ x = sprintf("%.1f", $1); print x }'`
 done
