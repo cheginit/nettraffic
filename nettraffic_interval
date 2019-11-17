@@ -160,9 +160,9 @@ if [ "$UNIT" = "" ]; then
   fi
 fi
 
-RN=`echo $RX/$FAC | bc -l | awk '{ printf(" %4.1f", $1)}'`
-TN=`echo $TX/$FAC | bc -l | awk '{ printf(" %4.1f", $1)}'`
-AN=`echo $AX/$FAC | bc -l | awk '{ printf(" %4.1f", $1)}'`
+RN=`echo $RX/$FAC | bc -l | awk '{ printf("%4.1f", $1)}'`
+TN=`echo $TX/$FAC | bc -l | awk '{ printf("%4.1f", $1)}'`
+AN=`echo $AX/$FAC | bc -l | awk '{ printf("%4.1f", $1)}'`
 
 if [ "$RT" = "up" ]; then
   echo "<span font_desc=\"${VALUE_FONT}\" color=\"${VALUE_COLOR}\">
